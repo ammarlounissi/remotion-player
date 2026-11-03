@@ -15,7 +15,8 @@ export default function Home() {
   const playerRef = useRef<PlayerRef>(null);
   const [images, setImages] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [started, setStarted] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [activeTemplate, setActiveTemplate] = useState("book-showcase");
 
   useEffect(() => {
     let cancelled = false;
@@ -43,6 +44,23 @@ export default function Home() {
     };
   }, []);
 
+  useEffect(() => {
+    const player = playerRef.current;
+    if (!player) return;
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
+    player.addEventListener("play", handlePlay);
+    player.addEventListener("pause", handlePause);
+    setIsPlaying(player.isPlaying());
+
+    return () => {
+      player.removeEventListener("play", handlePlay);
+      player.removeEventListener("pause", handlePause);
+    };
+  }, [images]);
+
   const bookProps: BookShowcaseProps = {
     images: images ?? [],
     coverColor: "#25392f",
@@ -53,18 +71,21 @@ export default function Home() {
     music: null,
   };
 
-  const startPreview = () => {
-    playerRef.current?.play();
-    setStarted(true);
+  const togglePlayback = () => {
+    if (isPlaying) {
+      playerRef.current?.pause();
+    } else {
+      playerRef.current?.play();
+    }
   };
 
   return (
-    <main className="preview-shell">
-      <div className="preview-frame">
-        {error ? (
-          <div className="player-fallback" role="alert">{error}</div>
-        ) : images ? (
-          <>
+    <main className="workspace-shell">
+      <section className="preview-shell" aria-label="معاينة القالب">
+        <div className="preview-frame">
+          {error ? (
+            <div className="player-fallback" role="alert">{error}</div>
+          ) : images ? (
             <Player
               ref={playerRef}
               acknowledgeRemotionLicense
@@ -78,20 +99,52 @@ export default function Home() {
               controls={false}
               style={{ width: "100%", height: "100%" }}
             />
-            {!started && (
-              <button
-                className="preview-start-button"
-                type="button"
-                onClick={startPreview}
-              >
-                تشغيل المعاينة
-              </button>
-            )}
-          </>
-        ) : (
-          <div className="player-fallback" role="status">جارٍ تحميل المعاينة…</div>
-        )}
-      </div>
+          ) : (
+            <div className="player-fallback" role="status">جارٍ تحميل المعاينة…</div>
+          )}
+        </div>
+      </section>
+
+      <aside className="sidebar" aria-label="تحكم القوالب">
+        <div className="sidebar-heading">
+          <span className="sidebar-kicker">REMOTION PLAYER</span>
+          <h1>استوديو المعاينة</h1>
+        </div>
+
+        <button
+          className="playback-button"
+          type="button"
+          onClick={togglePlayback}
+          disabled={!images || Boolean(error)}
+          aria-label={isPlaying ? "إيقاف المعاينة مؤقتًا" : "تشغيل المعاينة"}
+        >
+          <span className="playback-icon" aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
+          <span>{isPlaying ? "إيقاف مؤقت" : "تشغيل المعاينة"}</span>
+        </button>
+
+        <div className="template-section">
+          <h2>القوالب</h2>
+          <button
+            className={`template-item${activeTemplate === "book-showcase" ? " is-active" : ""}`}
+            type="button"
+            onClick={() => {
+              setActiveTemplate("book-showcase");
+              playerRef.current?.play();
+            }}
+            disabled={!images || Boolean(error)}
+            aria-pressed={activeTemplate === "book-showcase"}
+          >
+            <span className="template-thumbnail" aria-hidden="true">
+              <span />
+            </span>
+            <span className="template-copy">
+              <span className="template-name">عرض الكتاب</span>
+              <span className="template-description">مشهد كتاب متحرك</span>
+            </span>
+            <span className="template-play" aria-hidden="true">▶</span>
+          </button>
+        </div>
+      </aside>
     </main>
   );
 }
