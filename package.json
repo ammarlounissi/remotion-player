@@ -9,11 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
-    "@remotion/player": "4.0.539",
     "next": "16.4.4",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "remotion": "4.0.539"
+    "remotion": "4.0.539",
+    "@remotion/player": "4.0.539",
+    "@remotion/fonts": "4.0.539"
   },
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",

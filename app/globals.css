@@ -1,26 +1,15 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+:root { color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { min-height: 100%; margin: 0; }
+body { background: #101310; }
+.preview-shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+.preview-frame { width: min(100%, 1280px); aspect-ratio: 16 / 9; overflow: hidden; background: #e9e9e7; box-shadow: 0 24px 80px rgba(0,0,0,.4); }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+.player-fallback { width: 100%; height: 100%; display: grid; place-items: center; color: #222; background: #e9e9e7; }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-}
+.preview-frame { position: relative; }
+.preview-start-button { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); z-index: 5; border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 14px 28px; color: #fff; background: rgba(20, 42, 31, .92); font: inherit; font-size: 18px; cursor: pointer; box-shadow: 0 8px 28px rgba(0,0,0,.28); }
+.preview-start-button:hover { background: #25392f; }
+.preview-start-button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
