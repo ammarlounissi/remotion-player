@@ -44,6 +44,10 @@ body {
 	background: #e9e9e7;
 	box-shadow: 0 28px 90px rgba(0, 0, 0, .45);
 }
+.preview-frame.is-portrait {
+	width: min(100%, 420px, 42vh);
+	aspect-ratio: 9 / 16;
+}
 
 .player-fallback {
 	width: 100%;

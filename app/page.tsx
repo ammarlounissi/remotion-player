@@ -1,11 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { Player, type PlayerRef } from "@remotion/player";
 import {
   BookShowcase,
   type BookShowcaseProps,
 } from "@/remotion/templates/book/BookShowcase";
+import { StoneBrandReveal } from "@/remotion/templates/stone/StoneBrandReveal";
+import stoneTemplate from "@/remotion/templates/stone/stone-template.json";
 
 type BookImagesFile = {
   images: string[];
@@ -16,7 +18,8 @@ export default function Home() {
   const [images, setImages] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeTemplate, setActiveTemplate] = useState("book-showcase");
+  const [activeTemplate, setActiveTemplate] = useState("stone-brand");
+  const playOnSelection = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +62,13 @@ export default function Home() {
       player.removeEventListener("play", handlePlay);
       player.removeEventListener("pause", handlePause);
     };
-  }, [images]);
+  }, [activeTemplate, images]);
+
+  useEffect(() => {
+    if (!playOnSelection.current) return;
+    playerRef.current?.play();
+    playOnSelection.current = false;
+  }, [activeTemplate]);
 
   const bookProps: BookShowcaseProps = {
     images: images ?? [],
@@ -79,29 +88,58 @@ export default function Home() {
     }
   };
 
+  const selectTemplate = (template: string) => {
+    if (template === activeTemplate) {
+      playerRef.current?.play();
+      return;
+    }
+    playOnSelection.current = true;
+    setActiveTemplate(template);
+  };
+
   return (
     <main className="workspace-shell">
       <section className="preview-shell" aria-label="معاينة القالب">
-        <div className="preview-frame">
-          {error ? (
-            <div className="player-fallback" role="alert">{error}</div>
-          ) : images ? (
-            <Player
-              ref={playerRef}
-              acknowledgeRemotionLicense
-              component={BookShowcase}
-              inputProps={bookProps}
-              durationInFrames={51 * 30}
-              compositionWidth={1920}
-              compositionHeight={1080}
-              fps={30}
-              loop
-              controls={false}
-              style={{ width: "100%", height: "100%" }}
-            />
-          ) : (
-            <div className="player-fallback" role="status">جارٍ تحميل المعاينة…</div>
-          )}
+        <div
+          className={`preview-frame${activeTemplate === "stone-brand" ? " is-portrait" : ""}`}
+        >
+          <Suspense fallback={<div className="player-fallback" role="status">جارٍ تجهيز المشهد…</div>}>
+            {activeTemplate === "stone-brand" ? (
+              <Player
+                key="stone-brand"
+                ref={playerRef}
+                acknowledgeRemotionLicense
+                component={StoneBrandReveal}
+                inputProps={{ text: stoneTemplate.text }}
+                durationInFrames={20 * 30}
+                compositionWidth={1080}
+                compositionHeight={1920}
+                fps={30}
+                loop
+                controls={false}
+                style={{ width: "100%", height: "100%" }}
+              />
+            ) : error ? (
+              <div className="player-fallback" role="alert">{error}</div>
+            ) : images ? (
+              <Player
+                key="book-showcase"
+                ref={playerRef}
+                acknowledgeRemotionLicense
+                component={BookShowcase}
+                inputProps={bookProps}
+                durationInFrames={51 * 30}
+                compositionWidth={1920}
+                compositionHeight={1080}
+                fps={30}
+                loop
+                controls={false}
+                style={{ width: "100%", height: "100%" }}
+              />
+            ) : (
+              <div className="player-fallback" role="status">جارٍ تحميل المعاينة…</div>
+            )}
+          </Suspense>
         </div>
       </section>
 
@@ -115,7 +153,7 @@ export default function Home() {
           className="playback-button"
           type="button"
           onClick={togglePlayback}
-          disabled={!images || Boolean(error)}
+          disabled={activeTemplate === "book-showcase" && (!images || Boolean(error))}
           aria-label={isPlaying ? "إيقاف المعاينة مؤقتًا" : "تشغيل المعاينة"}
         >
           <span className="playback-icon" aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
@@ -125,12 +163,24 @@ export default function Home() {
         <div className="template-section">
           <h2>القوالب</h2>
           <button
+            className={`template-item${activeTemplate === "stone-brand" ? " is-active" : ""}`}
+            type="button"
+            onClick={() => selectTemplate("stone-brand")}
+            aria-pressed={activeTemplate === "stone-brand"}
+          >
+            <span className="template-thumbnail stone-thumbnail" aria-hidden="true">
+              <span />
+            </span>
+            <span className="template-copy">
+              <span className="template-name">حجرة بلادي</span>
+              <span className="template-description">إعلان حجري عمودي · 20 ثانية</span>
+            </span>
+            <span className="template-play" aria-hidden="true">▶</span>
+          </button>
+          <button
             className={`template-item${activeTemplate === "book-showcase" ? " is-active" : ""}`}
             type="button"
-            onClick={() => {
-              setActiveTemplate("book-showcase");
-              playerRef.current?.play();
-            }}
+            onClick={() => selectTemplate("book-showcase")}
             disabled={!images || Boolean(error)}
             aria-pressed={activeTemplate === "book-showcase"}
           >
