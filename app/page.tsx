@@ -1,25 +1,8 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
-import { Player, type PlayerRef } from "@remotion/player";
-import {
-  BookShowcase,
-  type BookShowcaseProps,
-} from "@/remotion/templates/book/BookShowcase";
-import {
-  ImageCarousel,
-  carouselDuration,
-  type ImageCarouselProps,
-} from "@/remotion/templates/carousel/ImageCarousel";
-import carouselTemplate from "@/remotion/templates/carousel/carousel-template.json";
-import {
-  Carousel3D,
-  carousel3DDuration,
-  type Carousel3DProps,
-} from "@/remotion/templates/carousel3d/Carousel3D";
-import carousel3dTemplate from "@/remotion/templates/carousel3d/carousel3d-template.json";
-import { StoneBrandReveal } from "@/remotion/templates/stone/StoneBrandReveal";
-import stoneTemplate from "@/remotion/templates/stone/stone-template.json";
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
+import type { PlayerRef } from "@remotion/player";
+import { buildTemplates } from "./templates";
 
 type BookImagesFile = {
   images: string[];
@@ -30,8 +13,13 @@ export default function Home() {
   const [images, setImages] = useState<string[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [activeTemplate, setActiveTemplate] = useState("stone-brand");
+  const [activeId, setActiveId] = useState("stone-brand");
+  const [menuOpen, setMenuOpen] = useState(false);
   const playOnSelection = useRef(false);
+
+  const templates = useMemo(() => buildTemplates(images, error), [images, error]);
+  const active = templates.find((t) => t.id === activeId) ?? templates[0];
+  const canPlay = active.enabled && !active.notice;
 
   useEffect(() => {
     let cancelled = false;
@@ -74,214 +62,154 @@ export default function Home() {
       player.removeEventListener("play", handlePlay);
       player.removeEventListener("pause", handlePause);
     };
-  }, [activeTemplate, images]);
+  }, [activeId, images]);
 
   useEffect(() => {
     if (!playOnSelection.current) return;
     playerRef.current?.play();
     playOnSelection.current = false;
-  }, [activeTemplate]);
+  }, [activeId]);
 
-  const carouselProps = carouselTemplate.defaultProps as unknown as ImageCarouselProps;
-  const carousel3dProps = carousel3dTemplate.defaultProps as unknown as Carousel3DProps;
-  const carouselFps = carouselTemplate.fps;
-
-  const bookProps: BookShowcaseProps = {
-    images: images ?? [],
-    coverColor: "#25392f",
-    title: "بسم الله الرحمن الرحيم",
-    subtitle: "الحمد لله رب العالمين",
-    titleFont: "fonts/Cairo-Bold.ttf",
-    titleColor: "#1d2a24",
-    music: null,
-  };
+  // Escape يغلق الدرج على الهاتف.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setMenuOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
 
   const togglePlayback = () => {
-    if (isPlaying) {
-      playerRef.current?.pause();
-    } else {
-      playerRef.current?.play();
-    }
+    if (isPlaying) playerRef.current?.pause();
+    else playerRef.current?.play();
   };
 
-  const selectTemplate = (template: string) => {
-    if (template === activeTemplate) {
+  const selectTemplate = (id: string) => {
+    setMenuOpen(false);
+    if (id === activeId) {
       playerRef.current?.play();
       return;
     }
     playOnSelection.current = true;
-    setActiveTemplate(template);
+    setActiveId(id);
   };
+
+  const playLabel = isPlaying ? "إيقاف مؤقت" : "تشغيل المعاينة";
 
   return (
     <main className="workspace-shell">
       <section className="preview-shell" aria-label="معاينة القالب">
         <div
-          className={`preview-frame${activeTemplate === "stone-brand" ? " is-portrait" : ""}`}
+          className="preview-frame"
+          style={{ "--aspect": active.aspect } as React.CSSProperties}
         >
           <Suspense fallback={<div className="player-fallback" role="status">جارٍ تجهيز المشهد…</div>}>
-            {activeTemplate === "stone-brand" ? (
-              <Player
-                key="stone-brand"
-                ref={playerRef}
-                acknowledgeRemotionLicense
-                component={StoneBrandReveal}
-                inputProps={{ text: stoneTemplate.text }}
-                durationInFrames={20 * 30}
-                compositionWidth={1080}
-                compositionHeight={1920}
-                fps={30}
-                loop
-                controls={false}
-                style={{ width: "100%", height: "100%" }}
-              />
-            ) : activeTemplate === "image-carousel" ? (
-              <Player
-                key="image-carousel"
-                ref={playerRef}
-                acknowledgeRemotionLicense
-                component={ImageCarousel}
-                inputProps={carouselProps}
-                durationInFrames={carouselDuration(
-                  carouselProps.images.length,
-                  carouselProps.secondsPerImage ?? 2.5,
-                  carouselFps,
-                )}
-                compositionWidth={carouselTemplate.width}
-                compositionHeight={carouselTemplate.height}
-                fps={carouselFps}
-                loop
-                controls={false}
-                style={{ width: "100%", height: "100%" }}
-              />
-            ) : activeTemplate === "carousel-3d" ? (
-              <Player
-                key="carousel-3d"
-                ref={playerRef}
-                acknowledgeRemotionLicense
-                component={Carousel3D}
-                inputProps={carousel3dProps}
-                durationInFrames={carousel3DDuration(
-                  carousel3dProps.secondsPerRotation ?? 14,
-                  carousel3dTemplate.fps,
-                )}
-                compositionWidth={carousel3dTemplate.width}
-                compositionHeight={carousel3dTemplate.height}
-                fps={carousel3dTemplate.fps}
-                loop
-                controls={false}
-                style={{ width: "100%", height: "100%" }}
-              />
-            ) : error ? (
-              <div className="player-fallback" role="alert">{error}</div>
-            ) : images ? (
-              <Player
-                key="book-showcase"
-                ref={playerRef}
-                acknowledgeRemotionLicense
-                component={BookShowcase}
-                inputProps={bookProps}
-                durationInFrames={51 * 30}
-                compositionWidth={1920}
-                compositionHeight={1080}
-                fps={30}
-                loop
-                controls={false}
-                style={{ width: "100%", height: "100%" }}
-              />
+            {active.notice ? (
+              <div className="player-fallback" role={active.notice.role}>
+                {active.notice.text}
+              </div>
             ) : (
-              <div className="player-fallback" role="status">جارٍ تحميل المعاينة…</div>
+              active.renderPlayer(playerRef)
             )}
           </Suspense>
         </div>
       </section>
 
-      <aside className="sidebar" aria-label="تحكم القوالب">
-        <div className="sidebar-heading">
-          <span className="sidebar-kicker">REMOTION PLAYER</span>
-          <h1>استوديو المعاينة</h1>
-        </div>
-
+      {/* أزرار عائمة تظهر على الهاتف فقط */}
+      <div className="mobile-bar">
         <button
-          className="playback-button"
+          className="mobile-button"
+          type="button"
+          onClick={() => setMenuOpen(true)}
+          aria-expanded={menuOpen}
+          aria-controls="template-sidebar"
+        >
+          <span aria-hidden="true">☰</span>
+          <span>القوالب</span>
+        </button>
+        <button
+          className="mobile-button mobile-button-icon"
           type="button"
           onClick={togglePlayback}
-          disabled={activeTemplate === "book-showcase" && (!images || Boolean(error))}
-          aria-label={isPlaying ? "إيقاف المعاينة مؤقتًا" : "تشغيل المعاينة"}
+          disabled={!canPlay}
+          aria-label={playLabel}
         >
-          <span className="playback-icon" aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
-          <span>{isPlaying ? "إيقاف مؤقت" : "تشغيل المعاينة"}</span>
+          <span aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
         </button>
+      </div>
+
+      <div
+        className={`sidebar-backdrop${menuOpen ? " is-open" : ""}`}
+        onClick={() => setMenuOpen(false)}
+        aria-hidden="true"
+      />
+
+      <aside
+        id="template-sidebar"
+        className={`sidebar${menuOpen ? " is-open" : ""}`}
+        aria-label="تحكم القوالب"
+      >
+        <div className="sidebar-top">
+          <div className="sidebar-heading">
+            <div>
+              <span className="sidebar-kicker">REMOTION PLAYER</span>
+              <h1>استوديو المعاينة</h1>
+            </div>
+            <button
+              className="sidebar-close"
+              type="button"
+              onClick={() => setMenuOpen(false)}
+              aria-label="طيّ قائمة القوالب"
+            >
+              ✕
+            </button>
+          </div>
+
+          <button
+            className="playback-button"
+            type="button"
+            onClick={togglePlayback}
+            disabled={!canPlay}
+            aria-label={playLabel}
+          >
+            <span className="playback-icon" aria-hidden="true">{isPlaying ? "Ⅱ" : "▶"}</span>
+            <span>{playLabel}</span>
+          </button>
+        </div>
 
         <div className="template-section">
-          <h2>القوالب</h2>
-          <button
-            className={`template-item${activeTemplate === "stone-brand" ? " is-active" : ""}`}
-            type="button"
-            onClick={() => selectTemplate("stone-brand")}
-            aria-pressed={activeTemplate === "stone-brand"}
-          >
-            <span className="template-thumbnail stone-thumbnail" aria-hidden="true">
-              <span />
-            </span>
-            <span className="template-copy">
-              <span className="template-name">حجرة بلادي</span>
-              <span className="template-description">إعلان حجري عمودي · 20 ثانية</span>
-            </span>
-            <span className="template-play" aria-hidden="true">▶</span>
-          </button>
-          <button
-            className={`template-item${activeTemplate === "book-showcase" ? " is-active" : ""}`}
-            type="button"
-            onClick={() => selectTemplate("book-showcase")}
-            disabled={!images || Boolean(error)}
-            aria-pressed={activeTemplate === "book-showcase"}
-          >
-            <span className="template-thumbnail" aria-hidden="true">
-              <span />
-            </span>
-            <span className="template-copy">
-              <span className="template-name">عرض الكتاب</span>
-              <span className="template-description">مشهد كتاب متحرك</span>
-            </span>
-            <span className="template-play" aria-hidden="true">▶</span>
-          </button>
-          <button
-            className={`template-item${activeTemplate === "image-carousel" ? " is-active" : ""}`}
-            type="button"
-            onClick={() => selectTemplate("image-carousel")}
-            aria-pressed={activeTemplate === "image-carousel"}
-          >
-            <span className="template-thumbnail carousel-thumbnail" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="template-copy">
-              <span className="template-name">{carouselTemplate.name}</span>
-              <span className="template-description">{carouselTemplate.description}</span>
-            </span>
-            <span className="template-play" aria-hidden="true">▶</span>
-          </button>
-          <button
-            className={`template-item${activeTemplate === "carousel-3d" ? " is-active" : ""}`}
-            type="button"
-            onClick={() => selectTemplate("carousel-3d")}
-            aria-pressed={activeTemplate === "carousel-3d"}
-          >
-            <span className="template-thumbnail carousel3d-thumbnail" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-              <i />
-              <i />
-            </span>
-            <span className="template-copy">
-              <span className="template-name">{carousel3dTemplate.name}</span>
-              <span className="template-description">{carousel3dTemplate.description}</span>
-            </span>
-            <span className="template-play" aria-hidden="true">▶</span>
-          </button>
+          <h2>القوالب ({templates.length})</h2>
+          <div className="template-list">
+            {templates.map((template) => (
+              <button
+                key={template.id}
+                className={`template-item${template.id === active.id ? " is-active" : ""}`}
+                type="button"
+                onClick={() => selectTemplate(template.id)}
+                disabled={!template.enabled}
+                aria-pressed={template.id === active.id}
+              >
+                <span
+                  className={`template-thumbnail ${
+                    template.thumb.kind === "book" ? "" : template.thumb.className
+                  }`}
+                  aria-hidden="true"
+                >
+                  {template.thumb.kind === "book" ? (
+                    <span />
+                  ) : (
+                    Array.from({ length: template.thumb.count }, (_, i) => <i key={i} />)
+                  )}
+                </span>
+                <span className="template-copy">
+                  <span className="template-name">{template.name}</span>
+                  <span className="template-description">{template.description}</span>
+                </span>
+                <span className="template-play" aria-hidden="true">▶</span>
+              </button>
+            ))}
+          </div>
         </div>
       </aside>
     </main>

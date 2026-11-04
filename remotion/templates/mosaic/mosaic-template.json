@@ -1,0 +1,32 @@
+{
+  "id": "mosaic-reframe",
+  "name": "فسيفساء متحوّلة",
+  "description": "12 بلاطة تتبدّل بين شبكة منتظمة وفسيفساء ببلاطة موسّعة وشلال قطري",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "defaultProps": {
+    "images": [
+      "book-assets/5.jpg",
+      "book-assets/6.jpg",
+      "book-assets/7.jpg",
+      "book-assets/8.jpg",
+      "book-assets/9.jpg",
+      "book-assets/10.jpg",
+      "book-assets/11.jpg",
+      "book-assets/12.jpg",
+      "book-assets/13.jpg",
+      "book-assets/14.jpg",
+      "book-assets/15.jpg",
+      "book-assets/16.jpg"
+    ],
+    "seed": 7,
+    "holdSeconds": 2.2,
+    "transitionSeconds": 1.3,
+    "stagger": 0.5,
+    "padding": 40,
+    "gap": 16,
+    "borderRadius": 14,
+    "backgroundColor": "#101512"
+  }
+}

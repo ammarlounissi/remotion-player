@@ -18,11 +18,12 @@ body {
 }
 
 .workspace-shell {
-	min-height: 100vh;
+	height: 100vh;
+	height: 100dvh;
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) 320px;
-	grid-template-areas: "preview sidebar";
 	direction: ltr;
+	overflow: hidden;
 	background:
 		radial-gradient(ellipse at 38% 48%, rgba(86, 108, 78, .16), transparent 58%),
 		repeating-linear-gradient(135deg, rgba(255, 255, 255, .012) 0 1px, transparent 1px 5px),
@@ -30,23 +31,23 @@ body {
 }
 
 .preview-shell {
-	grid-area: preview;
-	min-height: 100vh;
+	grid-column: 1;
+	min-width: 0;
+	min-height: 0;
 	display: grid;
 	place-items: center;
 	padding: 40px;
 }
 
+/* الإطار يتّسع قدر الإمكان دون أن يتجاوز عرض المساحة أو ارتفاع الشاشة */
 .preview-frame {
-	width: min(100%, 1280px);
-	aspect-ratio: 16 / 9;
+	--aspect: 1.7778;
+	aspect-ratio: var(--aspect);
+	width: min(100%, calc((100vh - 80px) * var(--aspect)));
+	width: min(100%, calc((100dvh - 80px) * var(--aspect)));
 	overflow: hidden;
 	background: #e9e9e7;
 	box-shadow: 0 28px 90px rgba(0, 0, 0, .45);
-}
-.preview-frame.is-portrait {
-	width: min(100%, 420px, 42vh);
-	aspect-ratio: 9 / 16;
 }
 
 .player-fallback {
@@ -60,18 +61,31 @@ body {
 	text-align: center;
 }
 
+/* شريط جانبي ثابت: الرأس ثابت والقائمة تتمرّر */
 .sidebar {
-	grid-area: sidebar;
+	grid-column: 2;
 	direction: rtl;
+	min-height: 0;
 	display: flex;
 	flex-direction: column;
-	gap: 34px;
-	padding: 36px 24px;
 	border-left: 1px solid rgba(255, 255, 255, .08);
-	background: rgba(24, 29, 25, .92);
+	background: rgba(24, 29, 25, .96);
 }
+.sidebar-top {
+	display: grid;
+	gap: 20px;
+	padding: 28px 24px 20px;
+	border-bottom: 1px solid rgba(255, 255, 255, .08);
+}
+.sidebar-heading {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+}
+.sidebar-heading > div { display: grid; gap: 8px; }
+.sidebar-close, .mobile-bar, .sidebar-backdrop { display: none; }
 
-.sidebar-heading { display: grid; gap: 8px; }
 .sidebar-kicker {
 	color: var(--accent);
 	font-family: ui-monospace, monospace;
@@ -100,7 +114,17 @@ body {
 .playback-button:disabled, .template-item:disabled { cursor: not-allowed; opacity: .48; }
 .playback-icon { min-width: 20px; font-size: 16px; }
 
-.template-section { display: grid; gap: 12px; }
+.template-section {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 20px 24px 28px;
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+.template-list { display: grid; gap: 10px; }
 .template-section h2 {
 	margin: 0;
 	color: var(--text-muted);
@@ -156,19 +180,93 @@ body {
 	outline-offset: 3px;
 }
 
-@media (max-width: 760px) {
-	.workspace-shell {
-		grid-template-columns: minmax(0, 1fr);
-		grid-template-areas: "preview" "sidebar";
+/* الهاتف: المعاينة بملء الشاشة، والشريط درج ينطوي */
+@media (max-width: 900px) {
+	.workspace-shell { grid-template-columns: minmax(0, 1fr); }
+	.preview-shell { grid-column: 1; padding: 0; }
+	.preview-frame {
+		width: min(100%, calc(100dvh * var(--aspect)));
+		box-shadow: none;
 	}
-	.preview-shell { min-height: auto; padding: 28px 16px 20px; }
+
+	.mobile-bar {
+		position: fixed;
+		top: max(12px, env(safe-area-inset-top));
+		right: 12px;
+		z-index: 20;
+		display: flex;
+		gap: 8px;
+		direction: rtl;
+	}
+	.mobile-button {
+		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding: 0 14px;
+		border: 1px solid rgba(255, 255, 255, .22);
+		border-radius: 22px;
+		color: var(--text-primary);
+		background: rgba(17, 21, 18, .72);
+		-webkit-backdrop-filter: blur(8px);
+		backdrop-filter: blur(8px);
+		font: inherit;
+		font-size: 13px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+	.mobile-button-icon { width: 44px; padding: 0; }
+	.mobile-button:disabled { opacity: .48; cursor: not-allowed; }
+	.mobile-button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+
+	.sidebar-backdrop {
+		position: fixed;
+		inset: 0;
+		z-index: 30;
+		display: block;
+		background: rgba(0, 0, 0, .55);
+		opacity: 0;
+		visibility: hidden;
+		transition: opacity 200ms ease, visibility 200ms;
+	}
+	.sidebar-backdrop.is-open { opacity: 1; visibility: visible; }
+
 	.sidebar {
-		gap: 22px;
-		padding: 22px 18px 30px;
-		border-top: 1px solid rgba(255, 255, 255, .08);
-		border-left: 0;
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		right: 0;
+		z-index: 40;
+		width: min(86vw, 340px);
+		border-left: 1px solid rgba(255, 255, 255, .12);
+		box-shadow: -20px 0 60px rgba(0, 0, 0, .5);
+		transform: translateX(100%);
+		visibility: hidden;
+		transition: transform 240ms ease, visibility 240ms;
 	}
-	.sidebar-heading { gap: 4px; }
+	.sidebar.is-open { transform: translateX(0); visibility: visible; }
+
+	.sidebar-top { padding: 20px 18px 16px; gap: 16px; }
+	.template-section { padding: 16px 18px 28px; }
+	.sidebar-close {
+		display: grid;
+		place-items: center;
+		width: 36px;
+		height: 36px;
+		flex: 0 0 auto;
+		border: 1px solid rgba(255, 255, 255, .15);
+		border-radius: 50%;
+		color: var(--text-primary);
+		background: transparent;
+		font: inherit;
+		cursor: pointer;
+	}
+	.sidebar-close:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sidebar, .sidebar-backdrop { transition: none; }
 }
 
 .carousel-thumbnail {
@@ -210,3 +308,35 @@ body {
 .carousel3d-thumbnail i:nth-child(2),
 .carousel3d-thumbnail i:nth-child(4) { height: 22px; opacity: .7; }
 .carousel3d-thumbnail i:nth-child(3) { height: 28px; width: 11px; opacity: 1; }
+
+.mosaic-thumbnail {
+	place-items: stretch;
+	display: grid;
+	grid-template-columns: 1.4fr 1fr 1fr;
+	grid-template-rows: 1fr 1fr;
+	gap: 2px;
+	padding: 4px;
+	background: linear-gradient(135deg, #2b3a30, #101512);
+}
+.mosaic-thumbnail i {
+	display: block;
+	border-radius: 1px;
+	background: #d9d4c3;
+	opacity: .5;
+}
+.mosaic-thumbnail i:first-child { grid-row: 1 / 3; opacity: 1; }
+.mosaic-thumbnail i:last-child { grid-column: 2 / 4; }
+
+.stone-thumbnail {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: linear-gradient(135deg, #2b3a30, #101512);
+}
+.stone-thumbnail i {
+	display: block;
+	width: 17px;
+	height: 32px;
+	border-radius: 2px;
+	background: linear-gradient(160deg, #a7a99f, #5d625a);
+}
