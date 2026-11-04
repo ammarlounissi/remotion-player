@@ -191,3 +191,22 @@ body {
 	height: 28px;
 	opacity: 1;
 }
+
+.carousel3d-thumbnail {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	background: linear-gradient(135deg, #2b3a30, #101512);
+}
+.carousel3d-thumbnail i {
+	display: block;
+	width: 7px;
+	height: 16px;
+	border-radius: 1px;
+	background: #d9d4c3;
+	opacity: .45;
+}
+.carousel3d-thumbnail i:nth-child(2),
+.carousel3d-thumbnail i:nth-child(4) { height: 22px; opacity: .7; }
+.carousel3d-thumbnail i:nth-child(3) { height: 28px; width: 11px; opacity: 1; }

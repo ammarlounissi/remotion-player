@@ -1,0 +1,32 @@
+{
+  "id": "carousel-3d",
+  "name": "كاروسيل ثلاثي الأبعاد",
+  "description": "بطاقات تدور على حلقة في الفضاء وتواجه الكاميرا",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "defaultProps": {
+    "images": [
+      "book-assets/5.jpg",
+      "book-assets/6.jpg",
+      "book-assets/7.jpg",
+      "book-assets/8.jpg",
+      "book-assets/9.jpg",
+      "book-assets/10.jpg",
+      "book-assets/11.jpg",
+      "book-assets/12.jpg"
+    ],
+    "secondsPerRotation": 14,
+    "direction": 1,
+    "cardWidthRatio": 0.22,
+    "cardAspect": 0.75,
+    "radiusScale": 1.15,
+    "perspective": 1800,
+    "tilt": 8,
+    "sideOpacity": 0.35,
+    "showBack": false,
+    "reflection": true,
+    "borderRadius": 20,
+    "backgroundColor": "#0e1411"
+  }
+}

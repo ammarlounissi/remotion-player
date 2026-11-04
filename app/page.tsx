@@ -12,6 +12,12 @@ import {
   type ImageCarouselProps,
 } from "@/remotion/templates/carousel/ImageCarousel";
 import carouselTemplate from "@/remotion/templates/carousel/carousel-template.json";
+import {
+  Carousel3D,
+  carousel3DDuration,
+  type Carousel3DProps,
+} from "@/remotion/templates/carousel3d/Carousel3D";
+import carousel3dTemplate from "@/remotion/templates/carousel3d/carousel3d-template.json";
 import { StoneBrandReveal } from "@/remotion/templates/stone/StoneBrandReveal";
 import stoneTemplate from "@/remotion/templates/stone/stone-template.json";
 
@@ -77,6 +83,7 @@ export default function Home() {
   }, [activeTemplate]);
 
   const carouselProps = carouselTemplate.defaultProps as unknown as ImageCarouselProps;
+  const carousel3dProps = carousel3dTemplate.defaultProps as unknown as Carousel3DProps;
   const carouselFps = carouselTemplate.fps;
 
   const bookProps: BookShowcaseProps = {
@@ -143,6 +150,24 @@ export default function Home() {
                 compositionWidth={carouselTemplate.width}
                 compositionHeight={carouselTemplate.height}
                 fps={carouselFps}
+                loop
+                controls={false}
+                style={{ width: "100%", height: "100%" }}
+              />
+            ) : activeTemplate === "carousel-3d" ? (
+              <Player
+                key="carousel-3d"
+                ref={playerRef}
+                acknowledgeRemotionLicense
+                component={Carousel3D}
+                inputProps={carousel3dProps}
+                durationInFrames={carousel3DDuration(
+                  carousel3dProps.secondsPerRotation ?? 14,
+                  carousel3dTemplate.fps,
+                )}
+                compositionWidth={carousel3dTemplate.width}
+                compositionHeight={carousel3dTemplate.height}
+                fps={carousel3dTemplate.fps}
                 loop
                 controls={false}
                 style={{ width: "100%", height: "100%" }}
@@ -235,6 +260,25 @@ export default function Home() {
             <span className="template-copy">
               <span className="template-name">{carouselTemplate.name}</span>
               <span className="template-description">{carouselTemplate.description}</span>
+            </span>
+            <span className="template-play" aria-hidden="true">▶</span>
+          </button>
+          <button
+            className={`template-item${activeTemplate === "carousel-3d" ? " is-active" : ""}`}
+            type="button"
+            onClick={() => selectTemplate("carousel-3d")}
+            aria-pressed={activeTemplate === "carousel-3d"}
+          >
+            <span className="template-thumbnail carousel3d-thumbnail" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
+              <i />
+            </span>
+            <span className="template-copy">
+              <span className="template-name">{carousel3dTemplate.name}</span>
+              <span className="template-description">{carousel3dTemplate.description}</span>
             </span>
             <span className="template-play" aria-hidden="true">▶</span>
           </button>
