@@ -1,0 +1,29 @@
+{
+  "id": "image-carousel",
+  "name": "كاروسيل الصور",
+  "description": "ثلاث صور تنزلق أفقيًا: المركزية كبيرة وكاملة والجانبيتان أصغر وباهتتان",
+  "width": 1920,
+  "height": 1080,
+  "fps": 30,
+  "defaultProps": {
+    "images": [
+      "book-assets/5.jpg",
+      "book-assets/6.jpg",
+      "book-assets/7.jpg",
+      "book-assets/8.jpg",
+      "book-assets/9.jpg",
+      "book-assets/10.jpg"
+    ],
+    "secondsPerImage": 2.5,
+    "holdRatio": 0.45,
+    "direction": 1,
+    "centerWidthRatio": 0.5,
+    "cardAspect": 1.3333,
+    "sideScale": 0.7,
+    "sideOpacity": 0.4,
+    "gapRatio": 0.08,
+    "borderRadius": 28,
+    "backgroundColor": "#101512",
+    "shadow": true
+  }
+}

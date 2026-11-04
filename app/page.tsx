@@ -6,6 +6,12 @@ import {
   BookShowcase,
   type BookShowcaseProps,
 } from "@/remotion/templates/book/BookShowcase";
+import {
+  ImageCarousel,
+  carouselDuration,
+  type ImageCarouselProps,
+} from "@/remotion/templates/carousel/ImageCarousel";
+import carouselTemplate from "@/remotion/templates/carousel/carousel-template.json";
 import { StoneBrandReveal } from "@/remotion/templates/stone/StoneBrandReveal";
 import stoneTemplate from "@/remotion/templates/stone/stone-template.json";
 
@@ -70,6 +76,9 @@ export default function Home() {
     playOnSelection.current = false;
   }, [activeTemplate]);
 
+  const carouselProps = carouselTemplate.defaultProps as unknown as ImageCarouselProps;
+  const carouselFps = carouselTemplate.fps;
+
   const bookProps: BookShowcaseProps = {
     images: images ?? [],
     coverColor: "#25392f",
@@ -115,6 +124,25 @@ export default function Home() {
                 compositionWidth={1080}
                 compositionHeight={1920}
                 fps={30}
+                loop
+                controls={false}
+                style={{ width: "100%", height: "100%" }}
+              />
+            ) : activeTemplate === "image-carousel" ? (
+              <Player
+                key="image-carousel"
+                ref={playerRef}
+                acknowledgeRemotionLicense
+                component={ImageCarousel}
+                inputProps={carouselProps}
+                durationInFrames={carouselDuration(
+                  carouselProps.images.length,
+                  carouselProps.secondsPerImage ?? 2.5,
+                  carouselFps,
+                )}
+                compositionWidth={carouselTemplate.width}
+                compositionHeight={carouselTemplate.height}
+                fps={carouselFps}
                 loop
                 controls={false}
                 style={{ width: "100%", height: "100%" }}
@@ -190,6 +218,23 @@ export default function Home() {
             <span className="template-copy">
               <span className="template-name">عرض الكتاب</span>
               <span className="template-description">مشهد كتاب متحرك</span>
+            </span>
+            <span className="template-play" aria-hidden="true">▶</span>
+          </button>
+          <button
+            className={`template-item${activeTemplate === "image-carousel" ? " is-active" : ""}`}
+            type="button"
+            onClick={() => selectTemplate("image-carousel")}
+            aria-pressed={activeTemplate === "image-carousel"}
+          >
+            <span className="template-thumbnail carousel-thumbnail" aria-hidden="true">
+              <i />
+              <i />
+              <i />
+            </span>
+            <span className="template-copy">
+              <span className="template-name">{carouselTemplate.name}</span>
+              <span className="template-description">{carouselTemplate.description}</span>
             </span>
             <span className="template-play" aria-hidden="true">▶</span>
           </button>

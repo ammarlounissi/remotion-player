@@ -170,3 +170,24 @@ body {
 	}
 	.sidebar-heading { gap: 4px; }
 }
+
+.carousel-thumbnail {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+	background: linear-gradient(135deg, #2b3a30, #101512);
+}
+.carousel-thumbnail i {
+	display: block;
+	width: 11px;
+	height: 18px;
+	border-radius: 2px;
+	background: #d9d4c3;
+	opacity: .4;
+}
+.carousel-thumbnail i:nth-child(2) {
+	width: 17px;
+	height: 28px;
+	opacity: 1;
+}
