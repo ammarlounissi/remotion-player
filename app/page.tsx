@@ -4,48 +4,16 @@ import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { PlayerRef } from "@remotion/player";
 import { buildTemplates } from "./templates";
 
-type BookImagesFile = {
-  images: string[];
-};
-
 export default function Home() {
   const playerRef = useRef<PlayerRef>(null);
-  const [images, setImages] = useState<string[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [activeId, setActiveId] = useState("stone-brand");
   const [menuOpen, setMenuOpen] = useState(false);
   const playOnSelection = useRef(false);
 
-  const templates = useMemo(() => buildTemplates(images, error), [images, error]);
+  const templates = useMemo(() => buildTemplates(), []);
   const active = templates.find((t) => t.id === activeId) ?? templates[0];
   const canPlay = active.enabled && !active.notice;
-
-  useEffect(() => {
-    let cancelled = false;
-
-    fetch("/book-images.json", { cache: "no-store" })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`تعذّر تحميل ملف الصور (${response.status})`);
-        }
-        return (await response.json()) as BookImagesFile;
-      })
-      .then((data) => {
-        if (!Array.isArray(data.images) || data.images.length === 0) {
-          throw new Error("ملف JSON لا يحتوي قائمة صور صالحة");
-        }
-        if (!cancelled) setImages(data.images);
-      })
-      .catch((reason: unknown) => {
-        if (cancelled) return;
-        setError(reason instanceof Error ? reason.message : "حدث خطأ أثناء تحميل الصور");
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   useEffect(() => {
     const player = playerRef.current;
@@ -62,7 +30,7 @@ export default function Home() {
       player.removeEventListener("play", handlePlay);
       player.removeEventListener("pause", handlePause);
     };
-  }, [activeId, images]);
+  }, [activeId]);
 
   useEffect(() => {
     if (!playOnSelection.current) return;
@@ -191,16 +159,10 @@ export default function Home() {
                 aria-pressed={template.id === active.id}
               >
                 <span
-                  className={`template-thumbnail ${
-                    template.thumb.kind === "book" ? "" : template.thumb.className
-                  }`}
+                  className={`template-thumbnail ${template.thumb.className}`}
                   aria-hidden="true"
                 >
-                  {template.thumb.kind === "book" ? (
-                    <span />
-                  ) : (
-                    Array.from({ length: template.thumb.count }, (_, i) => <i key={i} />)
-                  )}
+                  {Array.from({ length: template.thumb.count }, (_, i) => <i key={i} />)}
                 </span>
                 <span className="template-copy">
                   <span className="template-name">{template.name}</span>
